@@ -150,14 +150,14 @@ def list_supported_pedal_by_category(categories: list[str]) -> dict:
             p_id = pedal.get("Id")
             p_name = pedal.get("Name")
             if p_id is not None and p_name:
-                cat_pedals.append({"id": int(p_id), "name": str(p_name)})
+                cat_pedals.append(str(p_name))
                 
         output_result[clean_cat] = cat_pedals
         
     return output_result  
 
 @mcp.tool()
-def show_pedal_details_by_pedal_ids(pedal_ids: list[int]) -> dict:
+def show_pedal_details_by_pedal_names(pedal_names: list[str]) -> dict:
     """
     Requests complete configuration details for MULTIPLE pedals or amp models at once.
     Provide an array of unique pedal ID integers.
@@ -170,22 +170,22 @@ def show_pedal_details_by_pedal_ids(pedal_ids: list[int]) -> dict:
     """
     output_result = {}
     
-    if isinstance(pedal_ids, int):
-        pedal_ids = [pedal_ids]
+    if isinstance(pedal_names, str):
+        pedal_names = [pedal_names]
         
-    for p_id in pedal_ids:
+    for p_name in pedal_names:
         try:
-            target_id = int(p_id)
+            target_name = str(p_name)
         except (ValueError, TypeError):
-            output_result[str(p_id)] = {"error": "Invalid pedal ID format."}
+            output_result[str(p_name)] = {"error": "Invalid pedal ID format."}
             continue
             
         found = False
         for category_item in PEDALS_DATABASE:
             effects_list = category_item.get("Effects") or []
             for pedal in effects_list:
-                current_id = pedal.get("Id")
-                if current_id is not None and int(current_id) == target_id:
+                current_name = pedal.get("Name")
+                if current_name is not None and str(current_name) == target_name:
                     raw_knobs = pedal.get("Knobs") or []
                     clean_knobs = []
                     
@@ -210,10 +210,8 @@ def show_pedal_details_by_pedal_ids(pedal_ids: list[int]) -> dict:
                             "options": clean_options
                         })
                         
-                    output_result[str(target_id)] = {
+                    output_result[pedal.get("Name")] = {
                         "category": category_item.get("Name", "Unknown"),
-                        "id": target_id,
-                        "name": pedal.get("Name", "Unknown"),
                         "knobs": clean_knobs
                     }
                     found = True
@@ -222,7 +220,7 @@ def show_pedal_details_by_pedal_ids(pedal_ids: list[int]) -> dict:
                 break
                 
         if not found:
-            output_result[str(target_id)] = {"error": f"Pedal ID {target_id} not found."}
+            output_result[str(target_name)] = {"error": f"Pedal name {target_name} not found."}
             
     return output_result
 
